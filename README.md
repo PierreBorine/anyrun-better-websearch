@@ -5,8 +5,6 @@ An [anyrun](https://github.com/Kirottu/anyrun) plugin to search the web through 
 
 Enter your search term with a prefix to call for the search engine. If more than two search engines have the same prefix, select the search action you want with arrow keys.
 
-![Demo Video](https://github.com/kuokuo123/anyrun-websearch-plus/raw/main/asset/demo.mkv?raw=true)
-
 ## Configuration
 
 An example config.
