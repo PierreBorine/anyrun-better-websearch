@@ -22,7 +22,7 @@ If multiple engines are matched, you can select the one you want<br>
 An example config.
 
 ```ron
-// <Anyrun config dir>/websearch_plus.ron
+// <Anyrun config dir>/websearch-plus.ron
 
 Config(
   // You can also depend wholely on secondary prefixes by setting the main prefix to "".
