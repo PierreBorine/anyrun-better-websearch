@@ -8,27 +8,45 @@ use urlencoding::encode;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 enum Engine {
-    Google,
+    Brave,
+    DuckDuckGo,
+    Ecosia,
+    Github,
+    Qwant,
+    Startpage,
+    Yandex,
     Custom { name: String, url: String, secondary_prefix: String },
 }
 
 impl Engine {
     fn value(&self) -> &str {
         match self {
-            Self::Google => "google.com/search?q={}",
+            Self::Brave => "search.brave.com/search?q={}",
+            Self::DuckDuckGo => "duckduckgo.com/?q={}",
+            Self::Ecosia => "ecosia.org/search?q={}",
+            Self::Github => "github.com/search?q={}",
+            Self::Qwant => "qwant.com/?q={}",
+            Self::Startpage => "startpage.com/sp/search?query={}",
+            Self::Yandex => "yandex.com/search/?text={}",
             Self::Custom { url, .. } => url,
-        }
-    }
-    fn secondary_prefix(&self) -> &str {
-        match self {
-            Self::Google => "",
-            Self::Custom { secondary_prefix, .. } => secondary_prefix,
         }
     }
     fn name(&self) -> &str {
         match self {
-            Self::Google => "Google",
+            Self::Brave => "Brave",
+            Self::DuckDuckGo => "DuckDuckGo",
+            Self::Ecosia => "Ecosia",
+            Self::Github => "Github",
+            Self::Qwant => "Qwant",
+            Self::Startpage => "Startpage",
+            Self::Yandex => "Yandex",
             Self::Custom { name, .. } => name,
+        }
+    }
+    fn secondary_prefix(&self) -> &str {
+        match self {
+            Self::Custom { secondary_prefix, .. } => secondary_prefix,
+            _ => self.name()
         }
     }
     fn id(&self) -> u64 {
@@ -41,14 +59,24 @@ impl Engine {
 #[derive(Deserialize, Debug)]
 struct Config {
     prefix: String,
+    default_engine: Engine,
     engines: Vec<Engine>,
+}
+
+impl Config {
+    fn engines(&self) -> Vec<Engine> {
+        let mut all_engines = self.engines.clone();
+        all_engines.push(self.default_engine.clone());
+        all_engines
+    }
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
             prefix: "?".to_string(),
-            engines: vec![Engine::Google],
+            default_engine: Engine::DuckDuckGo,
+            engines: vec![],
         }
     }
 }
@@ -77,14 +105,15 @@ fn get_matches(input: RString, config: &Config) -> RVec<Match> {
         let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
 
         config
-            .engines
+            .engines()
             .iter()
             .filter(|engine| {
                 let query = input.strip_prefix(&config.prefix).expect("Unable to strip prefix from input lines");
+                // if there are no secondary prefix directly after the main prefix
                 let default = query.starts_with(' ');
 
                 // Not using a secondary prefix (default engine)
-                (default && engine == &&Engine::Google)
+                (default && engine == &&config.default_engine)
                 // Matches one of the engines
                 || (matcher.fuzzy_match(
                     engine.secondary_prefix().to_lowercase().as_str(),
@@ -103,7 +132,7 @@ fn get_matches(input: RString, config: &Config) -> RVec<Match> {
                         if s_prefix.is_empty() {
                             String::new()
                         } else {
-                            format!(" ({}{})", config.prefix, s_prefix)
+                            format!(" ({}{})", config.prefix, s_prefix.to_lowercase())
                         }
                     }
                 ).into()),
@@ -119,8 +148,8 @@ fn get_matches(input: RString, config: &Config) -> RVec<Match> {
 fn handler(selection: Match, config: &Config) -> HandleResult {
 
     let engine = config
-        .engines
-        .iter()
+        .engines()
+        .into_iter()
         .find(|engine| engine.id() == selection.id.unwrap())
         .unwrap();
 
