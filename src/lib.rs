@@ -1,10 +1,12 @@
 use abi_stable::std_types::{ROption, RString, RVec};
 use anyrun_plugin::*;
+use fuzzy_matcher::FuzzyMatcher;
 use serde::{Deserialize, Serialize};
 use std::{fs, process::Command};
+use std::hash::{Hash, Hasher, DefaultHasher};
 use urlencoding::encode;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 enum Engine {
     Google,
     Custom { name: String, url: String, secondary_prefix: String },
@@ -28,6 +30,11 @@ impl Engine {
             Self::Google => "Google",
             Self::Custom { name, .. } => name,
         }
+    }
+    fn id(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.name().hash(&mut hasher);
+        hasher.finish()
     }
 }
 
@@ -67,20 +74,42 @@ fn get_matches(input: RString, config: &Config) -> RVec<Match> {
     if !input.starts_with(&config.prefix) {
         RVec::new()
     } else {
+        let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
+
         config
             .engines
             .iter()
-            .filter(|engine| input.strip_prefix(&config.prefix)
-                    .expect("Unable to strip prefix from input lines")
-                    .starts_with(&engine.secondary_prefix())
-            )
-            .enumerate()
-            .map(|(_, engine)| Match {
-                title: input.trim_start_matches(&config.prefix).trim_start_matches(&engine.secondary_prefix()).into(),
-                description: ROption::RSome(format!("Search with {}", engine.name()).into()),
+            .filter(|engine| {
+                let query = input.strip_prefix(&config.prefix).expect("Unable to strip prefix from input lines");
+                let default = query.starts_with(' ');
+
+                // Not using a secondary prefix (default engine)
+                (default && engine == &&Engine::Google)
+                // Matches one of the engines
+                || (matcher.fuzzy_match(
+                    engine.secondary_prefix().to_lowercase().as_str(),
+                    query.split_whitespace().next().unwrap_or("").to_lowercase().as_str()
+                ).is_some() && !default)
+            })
+            .map(|engine| Match {
+                title: input
+                    .trim_start_matches(&config.prefix) // trim main prefix
+                    .trim_start_matches(|c: char| !c.is_whitespace()) // trim secondary prefix
+                    .trim_start() // trim whitespace left from previous trim
+                    .into(),
+                description: ROption::RSome(format!("Search with {}{}", engine.name(),
+                    {
+                        let s_prefix = engine.secondary_prefix();
+                        if s_prefix.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" ({}{})", config.prefix, s_prefix)
+                        }
+                    }
+                ).into()),
                 use_pango: false,
                 icon: ROption::RNone,
-                id: ROption::RNone,
+                id: ROption::RSome(engine.id()),
             })
             .collect()
     }
@@ -92,7 +121,7 @@ fn handler(selection: Match, config: &Config) -> HandleResult {
     let engine = config
         .engines
         .iter()
-        .find(|engine| engine.name() == selection.description.clone().unwrap().replace("Search with ", ""))
+        .find(|engine| engine.id() == selection.id.unwrap())
         .unwrap();
 
     if let Err(why) = Command::new("sh")
