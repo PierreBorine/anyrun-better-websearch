@@ -83,7 +83,7 @@ impl Default for Config {
 
 #[init]
 fn init(config_dir: RString) -> Config {
-    match fs::read_to_string(format!("{}/websearch-plus.ron", config_dir)) {
+    match fs::read_to_string(format!("{}/better-websearch.ron", config_dir)) {
         Ok(content) => ron::from_str(&content).unwrap_or_default(),
         Err(_) => Config::default(),
     }
@@ -92,7 +92,7 @@ fn init(config_dir: RString) -> Config {
 #[info]
 fn info() -> PluginInfo {
     PluginInfo {
-        name: "Websearch+".into(),
+        name: "Websearch".into(),
         icon: "distributor-logo-netrunner".into(),
     }
 }
@@ -163,7 +163,7 @@ fn handler(selection: Match, config: &Config) -> HandleResult {
         ))
         .spawn()
     {
-        println!("Failed to perform websearch-plus: {}", why);
+        println!("Failed to perform better-websearch: {}", why);
     }
 
     HandleResult::Close

@@ -1,5 +1,36 @@
-# Anyrun-Websearch-Plus
-An [anyrun](https://github.com/Kirottu/anyrun) plugin to search the web through customized search engines. Different from the original [ websearch ](https://github.com/Kirottu/anyrun/tree/master/plugins/websearch) plugin, this modified version allows for setting prefixes for individual search engines.
+# Anyrun-Better-Websearch
+An [Anyrun](https://github.com/Kirottu/anyrun) plugin to search the web through customized search engines.
+
+## Features
+This plugin is a fork of [anyrun-websearch-plus](https://github.com/kuokuo123/anyrun-websearch-plus) with the following additional features compared to the original [websearch](https://github.com/Kirottu/anyrun/tree/master/plugins/websearch).
+
+- A Nix flake.
+  <details>
+  <summary>Usage</summary>
+
+  ### Add to the flake
+  ```Nix
+    # flake.nix
+    # ...
+    inputs = {
+      anyrun-better-websearch.url = "github:PierreBorine/anyrun-better-websearch";
+    };
+    # ...
+  ```
+
+  ### Use the package
+  ```Nix
+    # home.nix
+    # ...
+    programs.anyrun.config.plugins = [
+      inputs.anyrun-better-websearch.packages.${pkgs.system}.default
+    ];
+    # ...
+  ```
+
+  </details>
+- Secondary prefixes to easily search with a specific engine.
+- Fuzzy matched prefixes for more flexible search.
 
 ## Usage
 
@@ -24,19 +55,21 @@ If multiple engines are matched, you can select the one you want<br>
 An example config.
 
 ```ron
-// <Anyrun config dir>/websearch-plus.ron
+// <Anyrun config dir>/better-websearch.ron
 
 Config(
   // You can also depend wholely on secondary prefixes by setting the main prefix to "".
   // Note that this will make the default Google engine unusable.
   prefix: "?",
 
-  // The engine to use when to secondary prefix is used
-  default_engine: DuckDuckGo,
-
   // Options:
   // Brave, DuckDuckGo, Ecosia, Github, Qwant, Startpage, Yandex, Custom
   // NOTE: `{}` is replaced by the search query and `https://` is automatically added in front.
+
+  // The engine to use when no secondary prefix is used
+  default_engine: DuckDuckGo,
+
+  // Additional engines to use
   engines: [
       Github,
       Brave,

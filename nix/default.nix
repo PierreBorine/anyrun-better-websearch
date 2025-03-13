@@ -1,6 +1,6 @@
 {rustPlatform}:
 rustPlatform.buildRustPackage {
-  pname = "anyrun-websearch-plus";
+  pname = "anyrun-better-websearch";
   version = "0.1.0";
 
   src = ../.;

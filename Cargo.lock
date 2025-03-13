@@ -51,6 +51,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyrun-better-websearch"
+version = "0.1.0"
+dependencies = [
+ "abi_stable",
+ "anyrun-plugin",
+ "fuzzy-matcher",
+ "ron",
+ "serde",
+ "strum",
+ "strum_macros",
+ "urlencoding",
+]
+
+[[package]]
 name = "anyrun-interface"
 version = "0.1.0"
 source = "git+https://github.com/Kirottu/anyrun#06017e753c8886d5296768dca80745ee09402a2d"
@@ -75,20 +89,6 @@ dependencies = [
  "abi_stable",
  "anyrun-interface",
  "anyrun-macros",
-]
-
-[[package]]
-name = "anyrun-websearch-plus"
-version = "0.1.0"
-dependencies = [
- "abi_stable",
- "anyrun-plugin",
- "fuzzy-matcher",
- "ron",
- "serde",
- "strum",
- "strum_macros",
- "urlencoding",
 ]
 
 [[package]]

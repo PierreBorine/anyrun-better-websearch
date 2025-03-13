@@ -16,8 +16,8 @@
 
       perSystem = {pkgs, ...}: rec {
         packages = rec {
-          default = anyrun-websearch-plus;
-          anyrun-websearch-plus = pkgs.callPackage ./nix {};
+          default = anyrun-better-websearch;
+          anyrun-better-websearch = pkgs.callPackage ./nix {};
         };
 
         devShells.default = with pkgs;
